@@ -1,80 +1,47 @@
 import { Children } from "react/cjs/react.production.min";
 import {Box, Button, Text, TextField, Image} from '@skynexui/components'
 import appConfig from '../config.json'
+import {useRouter} from 'next/router';
+import React from "react";
 
-function GlobalStyle(){
-    return(
-        <style global jsx>{`
-        * {
-        margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            list-style: none;
-        }
-        body {
-            font-family: 'Open Sans', sans-serif;
-        }
-        
-        /* App fit Height */ 
-        html, body, #__next {
-            min-height: 100vh;
-            display: flex;
-            flex: 1;
-        }
-        #__next {
-            flex: 1;
-        }
-        #__next > * {
-            flex: 1;
-        }
-        `}</style>
-    );
-}
-
+//Atualizar a imagem apenas com mais de 2 caracteres
 function Title(props){
-    console.log(props.children);
-    const Tag = props.tag || 'h1';
-    return (
-        <>
-            <Tag>{props.children}</Tag>
-            <style jsx>{`
-                ${Tag}{
-                    color: ${appConfig.theme.colors.neutrals["900"]};
-                    font-size: 24px;
-                    font-weight: 600;
-                }
-            `}</style>
-        </>
-    );
-}
-
-function Subtitle(props){
-    console.log(props.children);
-    return( 
-        <h2>{props.children}</h2>
-    );
+  const Tag = props.tag || 'h1';
+  return (
+    <>
+      <Tag>{props.children}</Tag>
+      <style jsx>{`
+        ${Tag}{
+          color: ${appConfig.theme.colors.neutrals["900"]};
+          font-size: 24px;
+          font-weight: 600;
+        }
+      `}</style>
+    </>
+  );
 }
 
 /*
 function HomePage(){
-    //JSX
+  //JSX
     return(
-        <div>
-            <GlobalStyle /> 
-            <Title tag="h2">Chat do Maroto </Title> 
-            <Subtitle>Juro Solenemente não fazer nada de bom! </Subtitle>
+      <div>
+        <GlobalStyle /> 
+        <Title tag="h2">Chat do Maroto </Title> 
+        <Subtitle>Juro Solenemente não fazer nada de bom! </Subtitle>
 
-        </div>
+      </div>
     )
 }
 */
 
-export default function PaginaInicial() {
-    const username = 'LeoneBeta';
-  
+export default function HomePage(){
+    //const username = 'LeoneBeta';
+    const [username,setUsername] = React.useState('LeoneBeta');
+    const roteamento = useRouter();
+
     return (
       <>
-        <GlobalStyle />
         <Box
           styleSheet={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -101,7 +68,11 @@ export default function PaginaInicial() {
             {/* Formulário */}
             <Box
               as="form"
-              styleSheet={{
+              onSubmit={function(click){
+                click.preventDefault();
+                roteamento.push('/chat');
+              }}
+                styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 width: { xs: '100%', sm: '50%' }, textAlign: 'center', marginBottom: '32px',
               }}
@@ -110,8 +81,17 @@ export default function PaginaInicial() {
               <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[300] }}>
                 {appConfig.name}
               </Text>
-  
+
               <TextField
+                value={username}
+                onChange={function(event) {
+                  console.log('usuario digitou', event.target.value);
+                  // Onde ta o valor?
+                  const valor = event.target.value;
+                  // Trocar o valor da variavel
+                  // através do React e avise quem precisa
+                  setUsername(valor);
+                }}
                 fullWidth
                 textFieldColors={{
                   neutral: {
@@ -122,6 +102,7 @@ export default function PaginaInicial() {
                   },
                 }}
               />
+              
               <Button
                 type='submit'
                 label='Juro solenemente não fazer nada de bom'
@@ -177,6 +158,4 @@ export default function PaginaInicial() {
         </Box>
       </>
     );
-  }
-
-//export default HomePage
+}
