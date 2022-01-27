@@ -1,23 +1,51 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js';
+
+
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMwMzg5MywiZXhwIjoxOTU4ODc5ODkzfQ.CoxzlAbXjVgJoHdpgYHI7DFsWwOkZbpydOldCdf_ql4';
+const SUPABASE_ULR = 'https://nlffvrmhweezxiurzurq.supabase.co';
+const supabaseClient = createClient(SUPABASE_ULR,SUPABASE_ANON_KEY);
+
 
 export default function ChatPage() {
     // Sua lógica vai aqui
     const [mensagem,setMensagem] = React.useState('');
     const [listaMensagem, setListaMensagem] = React.useState([]);
     
+    React.useEffect(() => {
+        supabaseClient
+            .from('mensagens')
+            .select('*')
+            .then(({data})=>{
+                console.log('dados',data);
+                setListaMensagem(data);
+        })
+    }, []);
+
+
     function handleNovaMensagem(novaMensagem){
         const mensagem = {
-            id: listaMensagem.length + 1,
-            de: 'LeoneBeta',
+            //id: listaMensagem.length + 1,
+            origem: 'LeoneBeta',
             texto: novaMensagem,
         };
-        setListaMensagem([
-            mensagem,
-            ...listaMensagem,
-            
-        ]);
+
+        supabaseClient
+            .from('mensagens')
+            .insert([
+                mensagem
+            ])
+            .order('id', {ascending: false})
+            .then(({data}) => {
+                setListaMensagem([
+                    data[0],
+                    ...listaMensagem,      
+                ]);
+            });
+        
+       
         setMensagem('');
     }
     
@@ -172,10 +200,10 @@ function MessageList(props) {
                                     display: 'inline-block',
                                     marginRight: '8px',
                                 }}
-                                src={`https://github.com/LeoneBeta.png`}
+                                src={`https://github.com/${mensagem.origem}.png`}
                             />
                             <Text tag="strong">
-                                {mensagem.de}
+                                {mensagem.origem}
                             </Text>
                             <Text
                                 styleSheet={{
