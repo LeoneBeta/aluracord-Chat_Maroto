@@ -1,7 +1,9 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import {useRouter} from 'next/router';
 import { createClient } from '@supabase/supabase-js';
+import {ButtonSendSticker} from '../src/components/ButtonSendSticker';
 
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMwMzg5MywiZXhwIjoxOTU4ODc5ODkzfQ.CoxzlAbXjVgJoHdpgYHI7DFsWwOkZbpydOldCdf_ql4';
@@ -9,27 +11,59 @@ const SUPABASE_ULR = 'https://nlffvrmhweezxiurzurq.supabase.co';
 const supabaseClient = createClient(SUPABASE_ULR,SUPABASE_ANON_KEY);
 
 
-export default function ChatPage() {
+function realTimeMessage(addMessage){
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT',(answerLive) => {
+            addMessage(answerLive.new);
+        })
+        .subscribe();
+}
+
+export default function ChatPage(){
     // Sua lógica vai aqui
+    const roteamento = useRouter();
+    const user = roteamento.query.username;
     const [mensagem,setMensagem] = React.useState('');
     const [listaMensagem, setListaMensagem] = React.useState([]);
-    
+    {/*{
+            id: 1,
+            origem: 'LeoneBeta',
+            texto: ':sticker: https://c.tenor.com/VylWt5lyjBoAAAAC/omg-yes.gif',
+        }*/}
+
+
     React.useEffect(() => {
         supabaseClient
             .from('mensagens')
             .select('*')
+            .order('id', {ascending: false})
             .then(({data})=>{
-                console.log('dados',data);
+                //console.log('dados',data);
                 setListaMensagem(data);
-        })
+        });
+
+        const subscription = realTimeMessage((newMessage) => {
+            setListaMensagem((listValue) => {
+                return[
+                    newMessage,
+                    ...listValue,      
+                ]
+            });
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        }
+
     }, []);
 
 
-    function handleNovaMensagem(novaMensagem){
+    function handleNewMessage(newMessage){
         const mensagem = {
             //id: listaMensagem.length + 1,
-            origem: 'LeoneBeta',
-            texto: novaMensagem,
+            origem: user,
+            texto: newMessage,
         };
 
         supabaseClient
@@ -37,15 +71,8 @@ export default function ChatPage() {
             .insert([
                 mensagem
             ])
-            .order('id', {ascending: false})
-            .then(({data}) => {
-                setListaMensagem([
-                    data[0],
-                    ...listaMensagem,      
-                ]);
-            });
+            .then(({data}) => {});
         
-       
         setMensagem('');
     }
     
@@ -91,17 +118,6 @@ export default function ChatPage() {
                     
                 <MessageList mensagens={listaMensagem} />
 
-                {/* {listaMensagem.map((mensagemAtual) => {
-                        return(
-                            <li key={mensagemAtual.id}>
-                                {mensagemAtual.de} : {mensagemAtual.texto} 
-                            </li>
-                        )
-                            
-                        
-                    })}
-                */}
-
                     <Box
                         as="form"
                         styleSheet={{
@@ -118,7 +134,7 @@ export default function ChatPage() {
                             onKeyPress={(event)=>{
                                 if(event.key === 'Enter'){
                                     event.preventDefault();
-                                    handleNovaMensagem(mensagem);
+                                    handleNewMessage(mensagem);
                                 }
                             }}
                             placeholder="Insira seu feitiço aqui..."
@@ -132,6 +148,12 @@ export default function ChatPage() {
                                 backgroundColor: appConfig.theme.colors.neutrals[800],
                                 marginRight: '12px',
                                 color: appConfig.theme.colors.neutrals[200],
+                            }}
+                        />
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker) => {
+                                //console.log('[USANDO O COMPONENTE] Salva o sticker no banco');
+                                handleNewMessage(':sticker: ' + sticker);
                             }}
                         />
                     </Box>
@@ -160,12 +182,13 @@ function Header() {
 }
 
 function MessageList(props) {
-    console.log(props);
+    //console.log(props);
     return (
         <Box
             tag="ul"
             styleSheet={{
-                overflow: 'scroll',
+                overflowX: 'hidden',
+                //overflow: 'scroll',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
@@ -216,7 +239,10 @@ function MessageList(props) {
                                 {(new Date().toLocaleDateString())}
                             </Text>
                         </Box>
-                        {mensagem.texto}
+                        {mensagem.texto.startsWith(':sticker:')
+                        ? (<Image src={mensagem.texto.replace(':sticker:','')}/>)
+                        : (mensagem.texto)
+                        }
                     </Text>
                 );
             })}

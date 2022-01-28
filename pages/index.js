@@ -21,23 +21,8 @@ function Title(props){
   );
 }
 
-/*
-function HomePage(){
-  //JSX
-    return(
-      <div>
-        <GlobalStyle /> 
-        <Title tag="h2">Chat do Maroto </Title> 
-        <Subtitle>Juro Solenemente não fazer nada de bom! </Subtitle>
-
-      </div>
-    )
-}
-*/
-
 export default function HomePage(){
-    //const username = 'LeoneBeta';
-    const [username,setUsername] = React.useState('LeoneBeta');
+    const [username,setUsername] = React.useState('');
     const roteamento = useRouter();
 
     return (
@@ -70,7 +55,7 @@ export default function HomePage(){
               as="form"
               onSubmit={function(click){
                 click.preventDefault();
-                roteamento.push('/chat');
+                roteamento.push(`/chat?username=${username}`);
               }}
                 styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
